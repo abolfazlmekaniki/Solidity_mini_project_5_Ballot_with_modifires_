@@ -67,24 +67,51 @@ contract Ballot{
     }
 
 
-    function register(address newVoter) public  {
+    modifier onlyowner(){
 
         require(msg.sender==chairPerson , "you are not owner !");  // only owner can register new voter !
+        _;
 
-        require(newVoter != msg.sender , "owner was registerd already !");  // owner can not register twice !
+    }
 
-        require( voters[newVoter].voted == false , "new voter must not vote already !");  // register only new voter  !!
+
+    modifier once_register(address newVoter){
+
+            require(newVoter != msg.sender , "owner was registerd already !");  // owner can not register twice !
+            _;
+    }
+
+
+    modifier not_vote_before(address newVoter){
+
+         require( voters[newVoter].voted == false , "new voter must not vote already !");  // register only new voter  !!
+         _;
+    }
+
+
+    function register(address newVoter) public onlyowner once_register(newVoter) not_vote_before(newVoter)  {
 
         voters[newVoter].voteWeidth = 1;  // register complited !
 
     }
 
 
-    function vote_(uint voteId) public {
+    modifier not_voted_before(){
 
         require( voters[msg.sender].voted == false , " you  voted already !!");  // voter must not vote already !
+        _;
+    }
+
+    modifier registerd_before(){
 
         require( voters[msg.sender].voteWeidth !=0 , " you have not registerd yet !"); // voter must have registerd already !
+        _;
+
+    }
+
+
+
+    function vote_(uint voteId) public not_voted_before registerd_before  {
 
         proposals[voteId].voteCount += voters[msg.sender].voteWeidth ; 
 
@@ -96,9 +123,9 @@ contract Ballot{
 
 
 
-    function count() public {
 
-        require(msg.sender == chairPerson , " you are not owner !") ; // only owner can count the votes !
+
+    function count() public onlyowner {
 
 
 
